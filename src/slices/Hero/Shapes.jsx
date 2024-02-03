@@ -10,10 +10,11 @@ import { gsap } from "gsap";
 
 export default function Shapes() {
   return (
-    <div className="row-span-1 row-start-1 -mt-9 aspect-square md:cool-span-1 md:col-span-2 md:mt-0">
+    <div className="row-span-1 row-start-1 -mt-9 aspect-square  md:col-span-1 md:col-start-2 md:mt-0">
       <Canvas
         className="z-0"
-        shadows={{ antialias: false }}
+        shadows
+        gl={{ antialias: false }}
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 25], fov: 30, near: 1, far: 40 }}
       >
@@ -36,26 +37,70 @@ export default function Shapes() {
 function Geometries() {
   const geometries = [
     {
-      poristion: [0, 0, 0],
+      position: [0, 0, 0],
       r: 0.3,
-      geometry: new THREE.IcosahedronGeometry(3),
+      geometry: new THREE.IcosahedronGeometry(3), // Gem
+    },
+    {
+      position: [1, -0.75, 4],
+      r: 0.4,
+      geometry: new THREE.CapsuleGeometry(0.5, 1.6, 2, 16), // Pill
+    },
+    {
+      position: [-1.4, 2, -4],
+      r: 0.6,
+      geometry: new THREE.DodecahedronGeometry(1.5), // Soccer ball
+    },
+    {
+      position: [-0.8, -0.75, 5],
+      r: 0.5,
+      geometry: new THREE.TorusGeometry(0.6, 0.25, 16, 32), // Donut
+    },
+    {
+      position: [1.6, 1.6, -4],
+      r: 0.7,
+      geometry: new THREE.OctahedronGeometry(1.5), // Diamond
     },
   ];
 
-  const materials = [new THREE.MeshNormalMaterial()];
+  const soundEffects = [
+    new Audio("/sounds/knock1.ogg"),
+    new Audio("/sounds/knock2.ogg"),
+    new Audio("/sounds/knock3.ogg"),
+  ];
+
+  const materials = [
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0 }),
+    new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.4 }),
+    new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.1 }),
+    new THREE.MeshStandardMaterial({ color: 0x8e44ad, roughness: 0.1 }),
+    new THREE.MeshStandardMaterial({ color: 0x1abc9c, roughness: 0.1 }),
+    new THREE.MeshStandardMaterial({
+      roughness: 0,
+      metalness: 0.5,
+      color: 0x2980b9,
+    }),
+    new THREE.MeshStandardMaterial({
+      color: 0x2c3e50,
+      roughness: 0.1,
+      metalness: 0.5,
+    }),
+  ];
 
   return geometries.map(({ position, r, geometry }) => (
     <Geometry
-      key={JSON.stringify(position)}
-      position={position?.map((p) => p * 2)}
+      key={JSON.stringify(position)} // Unique key
+      position={position.map((p) => p * 2)}
       geometry={geometry}
+      soundEffects={soundEffects}
       materials={materials}
       r={r}
-    ></Geometry>
+    />
   ));
 }
 
-function Geometry({ r, position, geometry, materials }) {
+function Geometry({ r, position, geometry, soundEffects, materials }) {
   const meshRef = useRef();
   const [visible, setVisible] = useState(false);
 
@@ -68,6 +113,8 @@ function Geometry({ r, position, geometry, materials }) {
   function handleClick(e) {
     const mesh = e.object;
 
+    gsap.utils.random(soundEffects).play();
+
     gsap.to(mesh.rotation, {
       x: `+=${gsap.utils.random(0, 2)}`,
       y: `+=${gsap.utils.random(0, 2)}`,
@@ -76,7 +123,8 @@ function Geometry({ r, position, geometry, materials }) {
       ease: "elastic.out(1,0.3)",
       yoyo: true,
     });
-    mesh.materials = getRandomMaterial();
+
+    mesh.material = getRandomMaterial();
   }
 
   const handlePointerOver = () => {
@@ -99,7 +147,6 @@ function Geometry({ r, position, geometry, materials }) {
         delay: gsap.utils.random(0, 0.5),
       });
     });
-
     return () => ctx.revert();
   }, []);
 
